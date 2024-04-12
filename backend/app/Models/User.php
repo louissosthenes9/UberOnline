@@ -21,16 +21,23 @@ class User extends Authenticatable
         'phone',
         'password',
     ];
+    protected $guarded =[
 
+    ];
     /**
      * The attributes that should be hidden for serialization.
      *
      * @var array<int, string>
      */
     protected $hidden = [
-        'password',
+        'login_code',
         'remember_token',
     ];
+
+    public function routeNotificationForTwilio()
+    {
+        return $this->phone;
+    }
     public  function driver(){
         return $this->hasOne(Driver::class);
 
