@@ -17,7 +17,6 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
-   
     protected $guarded =[
 
     ];
@@ -35,6 +34,7 @@ class User extends Authenticatable
     {
         return $this->phone;
     }
+
     public  function driver(){
         return $this->hasOne(Driver::class);
 
