@@ -9,6 +9,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Trip extends Model
 {
     use HasFactory;
+    protected  $guarded = [];
+    protected  $casts =[
+        'origin'=>'array',
+        'destination'=>'array',
+        'is_complete'=>'boolean',
+        'is_started'=>'boolean'
+
+    ];
 
     public function user() :BelongsTo
     {
@@ -18,4 +26,5 @@ class Trip extends Model
     {
         return $this->belongsTo(Driver::class);
     }
+
 }
