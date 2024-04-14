@@ -36,14 +36,18 @@ class LoginNeedsVerification extends Notification
      */
     public function toTwilio(object $notifiable): \NotificationChannels\Twilio\TwilioMessage|TwilioSmsMessage
     {
-
+       try {
         $loginCode = rand(111111,999999);
         $notifiable->update([
            'login_code'=>$loginCode
         ]);
 
-      return (new TwilioSmsMessage("Your login code is $loginCode \n dont share this with anyone! "));
+         return (new TwilioSmsMessage("Your login code is $loginCode \n dont share this with anyone! "));
 
+       } catch (\Exception $e) {
+          Log::error("An error occured during submition ".$e);
+       }
+      
     }
 
     /**
