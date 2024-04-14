@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Notifications\LoginNeedsVerification;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 
 class LoginController extends Controller
 {
@@ -23,8 +26,15 @@ class LoginController extends Controller
 
         }
         //send one time verification code
-        $user->notify(new LoginNeedsVerification());
-        return response()->json(['message'=>'Text message notification sent.']);
+        try {
+            Notification::sendNow($user,new LoginNeedsVerification());
+        } catch (Exception $e) {
+            Log::info('error'.$e);
+        } finally {
+            return response()->json(['message'=>'Text message notification sent.']);
+        }
+
+
     }
 
          public function verify(Request $request){
