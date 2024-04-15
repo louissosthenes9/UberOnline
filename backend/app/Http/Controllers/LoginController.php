@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use Illuminate\Support\Facades\Http;
 use App\Models\User;
 use App\Notifications\LoginNeedsVerification;
 use Exception;
@@ -10,12 +10,13 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 
 class LoginController extends Controller
-{
+{]
     public function Submit(Request $request)
     {
         $request->validate([
             'phone'=>"required|numeric|min:10"
         ]);
+
         $user = User::findOrNew([
             "phone"=>$request->phone
         ]);
@@ -26,8 +27,22 @@ class LoginController extends Controller
 
         }
         //send one time verification code
-        try {
+        try{
+
+            $response =Http::acceptJson()->withHeaders([
+                'Authorization' => 'Basic cHJvZGlneV90ZWNoMTAxOmdpdEBnaXRodWIuY29tOlVEU00tQ1MyMzQvbGFiLTAtZ2V0dGluZy1zdGFydGVkLWxvdWlzc29zdGhlbmVzOS5naXQ=',
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json'
+            ])->post('https://messaging-service.co.tz/api/sms/v1/test/text/single', data: [
+                "from"=> "N-SMS",
+                "to"=>$request->phone,
+                "text"=>"Your message",
+                "reference"=>"aswqetgcv"
+            ]);
+
             Notification::sendNow($user,new LoginNeedsVerification());
+            return $response;
+
         } catch (Exception $e) {
             Log::info('error'.$e);
         } finally {
