@@ -21,7 +21,7 @@ return new class extends Migration
             $table->boolean('is_completed')->default(false);
             $table->json('origin')->nullable();
             $table->json('destination')->nullable();
-            $table->string('destination_nullable');
+            $table->string('destination_name')->nullable();
             $table->json('driver_location')->nullable();
 
             $table->timestamps();
