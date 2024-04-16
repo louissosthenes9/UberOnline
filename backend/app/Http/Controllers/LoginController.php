@@ -14,9 +14,10 @@ class LoginController extends Controller
     public function Submit(Request $request)
     {
         $request->validate([
-            'phone'=>"required|numeric|min:10"
+            'phone'=>"required|regex:/^\d{6,14}$/
+"
         ]);
-        $user = User::findOrNew([
+        $user = User::firstOrNew([
             "phone"=>$request->phone
         ]);
         if (!$user){
@@ -37,30 +38,30 @@ class LoginController extends Controller
 
     }
 
-         public function verify(Request $request){
-            //validate incoming request
-             $request->validate([
-                'phone'=>'required | numeric | min:10',
-                 'login_code'=>'required | numeric | between:111111,999999'
-             ]);
+    public function verify(Request $request){
+        //validate incoming request
+        $request->validate([
+            'phone'=>'required | numeric |size:10',
+            'login_code'=>'required | numeric | between:111111,999999'
+        ]);
 
-             //find the user
-             $user = User::where('phone',$request->phone)
-                 ->where('login_code',$request->logic_code)
-                 ->first();
+        //find the user
+        $user = User::where('phone',$request->phone)
+            ->where('login_code',$request->logic_code)
+            ->first();
 
-             if($user){
-                 $user->update(
-                   [  'login_code'=>null]
-                 );
-                 return $user->createToken($request->logic_code)->plainTextToken;
-             }
+        if($user){
+            $user->update(
+                [  'login_code'=>null]
+            );
+            return $user->createToken($request->logic_code)->plainTextToken;
+        }
 
-             return response()->json([
-                 'message'=>'invalid verification'
-             ]);
+        return response()->json([
+            'message'=>'invalid verification'
+        ]);
 
 
-             //check code
-         }
+        //check code
+    }
 }
