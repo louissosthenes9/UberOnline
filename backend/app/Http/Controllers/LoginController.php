@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Notifications\LoginNeedsVerification;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 
@@ -17,7 +18,7 @@ class LoginController extends Controller
             'phone'=>"required|regex:/^\d{6,14}$/
 "
         ]);
-        $user = User::firstOrNew([
+        $user = User::firstOrCreate([
             "phone"=>$request->phone
         ]);
         if (!$user){
@@ -41,24 +42,28 @@ class LoginController extends Controller
     public function verify(Request $request){
         //validate incoming request
         $request->validate([
-            'phone'=>'required | numeric |size:10',
+            'phone'=>'required | numeric |regex:/^\d{6,14}$/',
             'login_code'=>'required | numeric | between:111111,999999'
         ]);
 
         //find the user
-        $user = User::where('phone',$request->phone)
-            ->where('login_code',$request->logic_code)
-            ->first();
+        $id = DB::table('users')
+                    ->where('phone',$request->phone)
+                    ->where('login_code',$request->login_code)
+                    ->value('id');
 
+        $user = User::find($id);
         if($user){
             $user->update(
                 [  'login_code'=>null]
             );
-            return $user->createToken($request->logic_code)->plainTextToken;
+             
+            $token = $user->createToken($request->login_code)->plainTextToken;
+            return $token;
         }
 
         return response()->json([
-            'message'=>'invalid verification'
+            'message'=>'unsuccessful login please try again'
         ]);
 
 
