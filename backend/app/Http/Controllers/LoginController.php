@@ -9,14 +9,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
+use App\Traits\ClickSendSms;
+use Twilio\Rest\Client;
 
 class LoginController extends Controller
 {
+
+
     public function Submit(Request $request)
     {
         $request->validate([
-            'phone'=>"required|regex:/^\d{6,14}$/
-"
+            'phone'=>"required|regex:/^\d{6,14}$/"
         ]);
         $user = User::firstOrCreate([
             "phone"=>$request->phone
@@ -27,17 +30,43 @@ class LoginController extends Controller
             ],401);
 
         }
-        //send one time verification code
+        $loginCode = rand(111111,999999);
+        $user->update(
+            ['login_code'=>$loginCode]
+        );
+
+        $receiverNumber = $request->phone;
+        $message = "Your login code is $loginCode \n dont share this with anyone! "; // Replace with your desired message
+
+        $sid = env('TWILIO_SID');
+        $token = env('TWILIO_TOKEN');
+        $fromNumber = env('TWILIO_FROM');
+
         try {
-            Notification::sendNow($user,new LoginNeedsVerification());
+            $client = new Client($sid, $token);
+            $client->messages->create($receiverNumber, [
+                'from' => $fromNumber,
+                'body' => $message
+            ]);
+
+            return 'SMS Sent Successfully.';
         } catch (Exception $e) {
-            Log::info('error'.$e);
-        } finally {
-            return response()->json(['message'=>'Text message notification sent.']);
+            return 'Error: ' . $e->getMessage();
         }
-
-
     }
+
+        // try {
+        //     Notification::sendNow($user->phone,new LoginNeedsVerification());
+
+        // } catch (Exception $e) {
+        //     Log::info('error'.$e);
+        // } finally {
+        //     return response()->json(['message'=>'Text message notification sent.']);
+        // }
+
+
+
+   
 
     public function verify(Request $request){
         //validate incoming request
@@ -57,7 +86,7 @@ class LoginController extends Controller
             $user->update(
                 [  'login_code'=>null]
             );
-             
+
             $token = $user->createToken($request->login_code)->plainTextToken;
             return $token;
         }
