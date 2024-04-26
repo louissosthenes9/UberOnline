@@ -11,15 +11,16 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use App\Traits\ClickSendSms;
 use Twilio\Rest\Client;
+use Illuminate\Support\Facades\Http;
 
 class LoginController extends Controller
 {
 
-
+    use ClickSendSms;
     public function Submit(Request $request)
     {
         $request->validate([
-            'phone'=>"required|regex:/^\d{6,14}$/"
+            'phone'=>"required"
         ]);
         $user = User::firstOrCreate([
             "phone"=>$request->phone
@@ -34,35 +35,32 @@ class LoginController extends Controller
         $user->update(
             ['login_code'=>$loginCode]
         );
-
+        $to =$request->phone;
+        $this->sendSms($to,$loginCode);
+         
         $receiverNumber = $request->phone;
-        $message = "Your login code is $loginCode \n dont share this with anyone! "; // Replace with your desired message
-
+        $message = "Your login code is $loginCode \n dont share this with anyone!....baby this is me trying to louis ...using code to send you sms coz my phone is out of charge "; // Replace with your desired message
+        //approach one using twilio
         $sid = env('TWILIO_SID');
         $token = env('TWILIO_TOKEN');
         $fromNumber = env('TWILIO_FROM');
 
-        try {
-            $client = new Client($sid, $token);
-            $client->messages->create($receiverNumber, [
-                'from' => $fromNumber,
-                'body' => $message
-            ]);
-
-            return 'SMS Sent Successfully.';
-        } catch (Exception $e) {
-            return 'Error: ' . $e->getMessage();
-        }
-    }
-
         // try {
-        //     Notification::sendNow($user->phone,new LoginNeedsVerification());
+        //     $client = new Client($sid, $token);
+        //     $client->messages->create($receiverNumber, [
+        //         'from' => $fromNumber,
+        //         'body' => $message
+        //     ]);
 
+        //     return 'SMS Sent Successfully.';
         // } catch (Exception $e) {
-        //     Log::info('error'.$e);
-        // } finally {
-        //     return response()->json(['message'=>'Text message notification sent.']);
+        //     return 'Error: ' . $e->getMessage();
         // }
+
+        //using click send
+
+     
+    }
 
 
 
@@ -71,7 +69,7 @@ class LoginController extends Controller
     public function verify(Request $request){
         //validate incoming request
         $request->validate([
-            'phone'=>'required | numeric |regex:/^\d{6,14}$/',
+            'phone'=>'required',
             'login_code'=>'required | numeric | between:111111,999999'
         ]);
 
